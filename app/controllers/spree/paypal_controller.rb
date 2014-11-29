@@ -15,7 +15,7 @@ module Spree
           :Name => adjustment.label,
           :Quantity => 1,
           :Amount => {
-            :currencyID => order.currency,
+            :currencyID => "GBP",
             :value => adjustment.amount
           }
         }
@@ -75,11 +75,11 @@ module Spree
 
     def line_item(item)
       {
-          :Name => item.product.name,
-          :Number => item.variant.sku,
+          :Name => item.variant.product.name,
+          :Number => item.variant.product.sku,
           :Quantity => item.quantity,
           :Amount => {
-              :currencyID => item.order.currency,
+              :currencyID => "GBP",
               :value => item.price
           },
           :ItemCategory => "Physical"
@@ -108,32 +108,32 @@ module Spree
     end
 
     def payment_details items
-      item_sum = items.sum { |i| i[:Quantity] * i[:Amount][:value] }
+      item_sum = items.sum { |i| i[:Quantity].to_i * i[:Amount][:value] }
       if item_sum.zero?
         # Paypal does not support no items or a zero dollar ItemTotal
         # This results in the order summary being simply "Current purchase"
         {
           :OrderTotal => {
-            :currencyID => current_order.currency,
+            :currencyID => "GBP",
             :value => current_order.total
           }
         }
       else
         {
           :OrderTotal => {
-            :currencyID => current_order.currency,
+            :currencyID => "GBP",
             :value => current_order.total
           },
           :ItemTotal => {
-            :currencyID => current_order.currency,
+            :currencyID => "GBP",
             :value => item_sum
           },
           :ShippingTotal => {
-            :currencyID => current_order.currency,
+            :currencyID => "GBP",
             :value => current_order.ship_total
           },
           :TaxTotal => {
-            :currencyID => current_order.currency,
+            :currencyID => "GBP",
             :value => current_order.tax_total
           },
           :ShipToAddress => address_options,
@@ -148,14 +148,14 @@ module Spree
       return {} unless address_required?
 
       {
-          :Name => current_order.bill_address.try(:full_name),
-          :Street1 => current_order.bill_address.address1,
-          :Street2 => current_order.bill_address.address2,
-          :CityName => current_order.bill_address.city,
+          :Name => current_order.shipping_address.try(:full_name),
+          :Street1 => current_order.shipping_address.address1,
+          :Street2 => current_order.shipping_address.address2,
+          :CityName => current_order.shipping_address.city,
           # :phone => current_order.bill_address.phone,
-          :StateOrProvince => current_order.bill_address.state_text,
-          :Country => current_order.bill_address.country.iso,
-          :PostalCode => current_order.bill_address.zipcode
+          :StateOrProvince => current_order.shipping_address.state_name,
+          :Country => current_order.shipping_address.country.iso,
+          :PostalCode => current_order.shipping_address.zipcode
       }
     end
 
